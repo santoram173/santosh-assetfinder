@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 Santhosh
+Copyright (c) 2026 Santosh — SantoshAssetFinder
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,33 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+───────────────────────────────────────────────────────────────────────────────
+IMPORTANT LEGAL NOTICE — AUTHORIZED USE ONLY
+───────────────────────────────────────────────────────────────────────────────
+
+This tool is intended solely for:
+  • Security professionals performing authorized penetration testing
+  • System administrators and IT teams auditing their own infrastructure
+  • Security researchers conducting lawful OSINT reconnaissance
+  • Bug bounty hunters operating within defined program scopes
+  • Students learning about cybersecurity in legal, controlled environments
+
+UNAUTHORIZED USE IS STRICTLY PROHIBITED. You must have explicit written
+authorization from the domain/system owner before scanning any target.
+Unauthorized scanning may violate:
+  • The Computer Fraud and Abuse Act (CFAA), 18 U.S.C. § 1030 (USA)
+  • The Computer Misuse Act 1990 (UK)
+  • EU Directive 2013/40/EU on attacks against information systems
+  • Canada's Criminal Code, Section 342.1
+  • Equivalent cybercrime laws in your jurisdiction
+
+The author(s) of this software accept NO liability for any misuse,
+illegal use, or damage caused by this tool. By using this software,
+you agree that you are solely responsible for ensuring compliance with
+all applicable laws and regulations in your jurisdiction.
+
+Data collected by this tool relies exclusively on publicly available
+information sources (crt.sh, Cloudflare DoH, RDAP, ip-api.com).
+No private systems are accessed or exploited.
+
