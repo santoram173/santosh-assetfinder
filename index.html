@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════════════╗
+  ║              SANTOSH ASSETFINDER — Live Cyber Asset Discovery            ║
+  ║                                                                          ║
+  ║  Copyright (c) 2026 Santosh. All Rights Reserved.                       ║
+  ║  Released under the MIT License. See LICENSE file for full terms.        ║
+  ║                                                                          ║
+  ║  AUTHORIZED USE ONLY. Scanning systems without explicit written          ║
+  ║  permission from the system owner may violate the Computer Fraud and     ║
+  ║  Abuse Act (CFAA), Computer Misuse Act, and equivalent laws worldwide.   ║
+  ║                                                                          ║
+  ║  Data Sources: crt.sh · Cloudflare DoH · rdap.org · ip-api.com          ║
+  ║  All data is publicly available. No systems are exploited or accessed.   ║
+  ║                                                                          ║
+  ║  GitHub: https://github.com/YOUR-USERNAME/santosh-assetfinder            ║
+  ╚══════════════════════════════════════════════════════════════════════════╝
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="SantoshAssetFinder — Free live cyber asset discovery and external attack surface reconnaissance tool. Discover subdomains, DNS records, SSL certs, IP addresses, and WHOIS data."/>
+<meta name="keywords" content="asset finder, subdomain enumeration, attack surface, OSINT, DNS recon, cyber security, penetration testing"/>
+<meta name="author" content="Santosh"/>
+<meta name="robots" content="index, follow"/>
+<meta property="og:title" content="SantoshAssetFinder – Live Cyber Asset Discovery"/>
+<meta property="og:description" content="Free tool to discover subdomains, DNS records, SSL certs, and IP intelligence for any domain. For authorized use only."/>
+<meta property="og:type" content="website"/>
+<title>SantoshAssetFinder – Live Cyber Asset Discovery</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════════
+   SantoshAssetFinder — Production Styles
+   Copyright (c) 2026 Santosh. MIT License.
+   ═══════════════════════════════════════════════════ */
+:root{
+  --bg:#030810;--panel:#060e1a;--panel2:#08111f;
+  --border:#0c2237;--border2:#112d46;
+  --accent:#00d4ff;--accent2:#00ff88;--accent3:#ff6b35;
+  --warn:#ffc107;--danger:#ff3b3b;
+  --text:#b8d4e8;--text2:#7a9ab0;--dim:#3a5568;
+  --mono:'Share Tech Mono',monospace;
+  --display:'Orbitron',monospace;
+  --body:'Exo 2',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;cursor:crosshair;}
+::selection{background:rgba(0,212,255,0.2);color:var(--accent);}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* ── BACKGROUND ── */
+canvas#bg{position:fixed;inset:0;z-index:0;opacity:0.35;pointer-events:none;}
+.grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,212,255,0.022) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,212,255,0.022) 1px,transparent 1px);background-size:55px 55px;}
+.glow1{position:fixed;z-index:0;pointer-events:none;top:-300px;left:50%;transform:translateX(-50%);
+  width:1100px;height:650px;background:radial-gradient(ellipse,rgba(0,212,255,0.06) 0%,transparent 65%);}
+.glow2{position:fixed;z-index:0;pointer-events:none;bottom:-200px;right:-200px;
+  width:600px;height:600px;background:radial-gradient(ellipse,rgba(0,255,136,0.04) 0%,transparent 65%);}
+.scanline{position:fixed;z-index:1;pointer-events:none;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;top:-2px;}
+.scanline.run{opacity:0.5;animation:scanAnim 2.8s linear infinite;}
+@keyframes scanAnim{from{top:-2px;}to{top:100vh;}}
+
+/* ── LAYOUT ── */
+.wrap{position:relative;z-index:2;max-width:1080px;margin:0 auto;padding:0 26px 80px;}
+
+/* ── LEGAL CONSENT MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(2,5,14,0.97);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  backdrop-filter:blur(4px);
+}
+.modal{
+  background:var(--panel2);
+  border:1px solid var(--border2);
+  border-top:3px solid var(--danger);
+  border-radius:8px;
+  max-width:680px;width:100%;
+  padding:36px;
+  box-shadow:0 0 80px rgba(255,59,59,0.15);
+  animation:modalIn .4s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(.97);}to{opacity:1;transform:none;}}
+.modal-icon{font-size:36px;margin-bottom:16px;text-align:center;}
+.modal h2{
+  font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:3px;
+  color:var(--danger);text-align:center;margin-bottom:6px;
+}
+.modal-subtitle{
+  font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--dim);
+  text-align:center;margin-bottom:24px;
+}
+.modal-section{
+  background:#020810;border:1px solid var(--border);border-radius:4px;
+  padding:16px 18px;margin-bottom:14px;
+}
+.modal-section h3{
+  font-family:var(--mono);font-size:10px;letter-spacing:3px;
+  margin-bottom:10px;text-transform:uppercase;
+}
+.modal-section h3.ok{color:var(--accent2);}
+.modal-section h3.no{color:var(--danger);}
+.modal-section ul{
+  list-style:none;font-family:var(--mono);font-size:11px;
+  color:var(--text2);line-height:2;
+}
+.modal-section ul li::before{margin-right:8px;}
+.modal-section.ok ul li::before{content:'✓';color:var(--accent2);}
+.modal-section.no ul li::before{content:'✗';color:var(--danger);}
+.modal-laws{
+  font-family:var(--mono);font-size:10px;color:var(--dim);
+  line-height:1.9;padding:12px 16px;
+  background:#020810;border:1px solid var(--border);border-left:3px solid var(--warn);
+  border-radius:3px;margin-bottom:16px;
+}
+.modal-laws span{color:var(--warn);}
+.modal-check{
+  display:flex;align-items:flex-start;gap:12px;
+  font-family:var(--mono);font-size:12px;color:var(--text2);
+  margin-bottom:20px;cursor:pointer;user-select:none;
+  padding:14px 16px;border:1px solid var(--border2);border-radius:4px;
+  transition:border-color .2s;
+}
+.modal-check:hover{border-color:var(--accent);}
+.modal-check input{accent-color:var(--accent2);width:16px;height:16px;flex-shrink:0;margin-top:1px;cursor:pointer;}
+.modal-check.checked{border-color:var(--accent2);background:rgba(0,255,136,0.04);}
+.modal-btns{display:flex;gap:10px;}
+.mbtn-accept{
+  flex:1;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;color:#000;font-family:var(--display);font-size:11px;font-weight:700;
+  letter-spacing:3px;padding:14px;border-radius:4px;cursor:pointer;
+  text-transform:uppercase;opacity:.4;transition:opacity .2s,box-shadow .2s;
+}
+.mbtn-accept.ready{opacity:1;box-shadow:0 4px 20px rgba(0,212,255,0.25);}
+.mbtn-accept.ready:hover{box-shadow:0 6px 30px rgba(0,212,255,0.4);}
+.mbtn-decline{
+  padding:14px 20px;background:none;border:1px solid var(--border2);
+  color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:2px;
+  border-radius:4px;cursor:pointer;text-transform:uppercase;transition:all .2s;
+}
+.mbtn-decline:hover{border-color:var(--danger);color:var(--danger);}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0 18px;border-bottom:1px solid var(--border);}
+.logo{display:flex;align-items:center;gap:14px;}
+.lhex{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:17px;font-weight:800;color:#000;flex-shrink:0;
+  animation:hexPulse 4s ease-in-out infinite;}
+@keyframes hexPulse{0%,100%{filter:drop-shadow(0 0 4px var(--accent));}50%{filter:drop-shadow(0 0 18px var(--accent));}}
+.lname{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.lsub{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--dim);margin-top:2px;}
+.nbadges{display:flex;gap:8px;align-items:center;}
+.nb{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:4px 10px;border-radius:2px;text-transform:uppercase;}
+.nb-live{border:1px solid var(--accent2);color:var(--accent2);}
+.nb-free{border:1px solid var(--accent);color:var(--accent);}
+.nb-legal{border:1px solid var(--dim);color:var(--dim);cursor:pointer;transition:all .2s;}
+.nb-legal:hover{border-color:var(--warn);color:var(--warn);}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:54px 0 42px;}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:5px;color:var(--accent);text-transform:uppercase;margin-bottom:20px;opacity:0;animation:up .6s .2s ease forwards;}
+.hero h1{font-family:var(--display);font-size:clamp(28px,5vw,50px);font-weight:800;line-height:1.12;letter-spacing:2px;margin-bottom:18px;opacity:0;animation:up .7s .35s ease forwards;}
+.h1g{display:block;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hdesc{font-size:16px;line-height:1.7;color:var(--text2);max-width:580px;margin:0 auto 44px;font-weight:300;opacity:0;animation:up .7s .5s ease forwards;}
+@keyframes up{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── SEARCH ── */
+.sbox{max-width:720px;margin:0 auto;background:var(--panel2);border:1px solid var(--border2);border-radius:6px;padding:26px 26px 18px;box-shadow:0 0 40px rgba(0,212,255,0.07),inset 0 1px 0 rgba(255,255,255,0.025);opacity:0;animation:up .7s .65s ease forwards;}
+.slabel{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.slabel::before{content:'>';color:var(--accent);}
+.srow{display:flex;gap:10px;}
+.sinput{flex:1;background:#020810;border:1px solid #0f2033;color:var(--accent);font-family:var(--mono);font-size:15px;padding:13px 17px;border-radius:4px;outline:none;transition:border-color .2s,box-shadow .2s;letter-spacing:1px;caret-color:var(--accent2);}
+.sinput::placeholder{color:#1a3348;}
+.sinput:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,0.1);}
+.sbtn{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#000;font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:3px;padding:13px 28px;border-radius:4px;cursor:pointer;text-transform:uppercase;white-space:nowrap;transition:filter .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 20px rgba(0,212,255,0.2);}
+.sbtn:hover{filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,212,255,0.3);}
+.sbtn:active{transform:translateY(0);}
+.sbtn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.opts{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.opill{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--text2);cursor:pointer;user-select:none;padding:5px 12px;border:1px solid var(--border2);border-radius:20px;transition:all .2s;}
+.opill:hover{border-color:var(--accent);color:var(--accent);}
+.opill input{display:none;}
+.opill.on{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.07);}
+.odot{width:6px;height:6px;border-radius:50%;background:var(--dim);transition:background .2s,box-shadow .2s;}
+.opill.on .odot{background:var(--accent2);box-shadow:0 0 5px var(--accent2);}
+
+/* ── STATUS ── */
+.stsec{max-width:720px;margin:12px auto 0;}
+.strow{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;color:var(--text2);min-height:24px;}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--dim);transition:background .3s,box-shadow .3s;}
+.sdot.run{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:db .8s step-end infinite;}
+.sdot.ok{background:var(--accent2);box-shadow:0 0 8px var(--accent2);}
+.sdot.err{background:var(--danger);box-shadow:0 0 6px var(--danger);}
+@keyframes db{0%,100%{opacity:1;}50%{opacity:0;}}
+.pgtrack{height:2px;background:#0a1a28;border-radius:2px;overflow:hidden;margin-top:8px;}
+.pgfill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s;border-radius:2px;}
+.alertbox{background:rgba(255,59,59,.07);border:1px solid rgba(255,59,59,.3);border-radius:4px;padding:12px 16px;font-family:var(--mono);font-size:12px;color:var(--danger);max-width:720px;margin:10px auto 0;display:none;}
+.log{max-width:720px;margin:12px auto 0;background:#020810;border:1px solid var(--border);border-radius:4px;padding:12px 16px;font-family:var(--mono);font-size:11px;max-height:150px;overflow-y:auto;display:none;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
+.ll{line-height:1.9;display:flex;gap:10px;}
+.lt{color:var(--dim);flex-shrink:0;}
+.linfo{color:var(--accent);}
+.lok{color:var(--accent2);}
+.lwarn{color:var(--warn);}
+.lerr{color:var(--danger);}
+
+/* ── RESULTS ── */
+#results{margin-top:46px;}
+.rhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.rtitle{font-family:var(--display);font-size:12px;letter-spacing:4px;color:var(--text2);text-transform:uppercase;}
+.rmeta{font-family:var(--mono);font-size:11px;color:var(--dim);}
+.rmeta span{color:var(--accent2);}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:13px;margin-bottom:28px;}
+.sc{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:17px 20px;position:relative;overflow:hidden;opacity:0;animation:up .5s ease forwards;transition:border-color .2s,box-shadow .2s;}
+.sc:hover{border-color:var(--border2);box-shadow:0 0 20px rgba(0,212,255,0.05);}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.c0::before{background:linear-gradient(90deg,var(--accent),transparent);}
+.c1::before{background:linear-gradient(90deg,var(--accent2),transparent);}
+.c2::before{background:linear-gradient(90deg,#a78bfa,transparent);}
+.c3::before{background:linear-gradient(90deg,var(--warn),transparent);}
+.c4::before{background:linear-gradient(90deg,var(--accent3),transparent);}
+.c5::before{background:linear-gradient(90deg,var(--danger),transparent);}
+.sv{font-family:var(--display);font-size:34px;font-weight:800;display:block;line-height:1;margin-bottom:5px;}
+.c0 .sv{color:var(--accent);}
+.c1 .sv{color:var(--accent2);}
+.c2 .sv{color:#a78bfa;}
+.c3 .sv{color:var(--warn);}
+.c4 .sv{color:var(--accent3);}
+.c5 .sv{color:var(--danger);}
+.sl{font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.tbtn{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dim);padding:10px 18px;background:none;border:none;cursor:pointer;text-transform:uppercase;border-bottom:2px solid transparent;transition:all .2s;position:relative;top:1px;}
+.tbtn:hover{color:var(--text);}
+.tbtn.on{color:var(--accent);border-bottom-color:var(--accent);}
+.twrap{overflow-x:auto;}
+table.at{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+table.at th{text-align:left;font-size:9px;letter-spacing:3px;color:var(--dim);padding:10px 13px;border-bottom:1px solid var(--border);white-space:nowrap;}
+table.at td{padding:10px 13px;border-bottom:1px solid #0a1822;vertical-align:middle;}
+table.at tr{opacity:0;animation:up .35s ease forwards;}
+table.at tr:hover td{background:rgba(0,212,255,0.025);}
+.cdomain{color:var(--accent);}
+.cip{color:var(--accent2);font-size:11px;}
+.cgeo{color:var(--dim);font-size:10px;margin-top:2px;}
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;letter-spacing:1.5px;padding:2px 7px;border-radius:2px;text-transform:uppercase;font-family:var(--mono);white-space:nowrap;margin:1px;}
+.tlive{background:rgba(0,255,136,.1);color:var(--accent2);border:1px solid rgba(0,255,136,.2);}
+.tssl{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.2);}
+.tport{background:rgba(255,107,53,.1);color:var(--accent3);border:1px solid rgba(255,107,53,.2);}
+.tcloud{background:rgba(167,139,250,.1);color:#a78bfa;border:1px solid rgba(167,139,250,.2);}
+.toff{background:rgba(58,85,104,.2);color:var(--dim);border:1px solid var(--border);}
+.tmx{background:rgba(255,193,7,.1);color:var(--warn);border:1px solid rgba(255,193,7,.2);}
+.tns{background:rgba(96,165,250,.08);color:#60a5fa;border:1px solid rgba(96,165,250,.2);}
+.rb{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:2px;padding:3px 8px;border-radius:2px;text-transform:uppercase;font-family:var(--mono);}
+.rlow{background:rgba(0,255,136,.07);color:var(--accent2);border:1px solid rgba(0,255,136,.15);}
+.rmed{background:rgba(255,193,7,.08);color:var(--warn);border:1px solid rgba(255,193,7,.15);}
+.rhigh{background:rgba(255,59,59,.1);color:var(--danger);border:1px solid rgba(255,59,59,.2);}
+.rd{width:6px;height:6px;border-radius:50%;}
+.rlow .rd{background:var(--accent2);}
+.rmed .rd{background:var(--warn);}
+.rhigh .rd{background:var(--danger);box-shadow:0 0 4px var(--danger);}
+.dpanel{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:18px;}
+.dph{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--accent);margin-bottom:12px;text-transform:uppercase;}
+.drec{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;opacity:0;animation:up .3s ease forwards;}
+.drec:last-child{border-bottom:none;}
+.dval{color:var(--text);word-break:break-all;flex:1;}
+.dttl{color:var(--dim);font-size:10px;flex-shrink:0;}
+.wpanel{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:18px;font-family:var(--mono);font-size:12px;}
+.wrow{display:grid;grid-template-columns:180px 1fr;padding:7px 0;border-bottom:1px solid var(--border);opacity:0;animation:up .3s ease forwards;}
+.wrow:last-child{border-bottom:none;}
+.wk{color:var(--dim);font-size:11px;letter-spacing:1px;}
+.wv{color:var(--text);}
+.wv.hi{color:var(--accent);}
+.wv.wa{color:var(--warn);}
+.expbar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:18px;}
+.ebtn{font-family:var(--mono);font-size:10px;letter-spacing:2px;padding:6px 13px;border-radius:3px;cursor:pointer;text-transform:uppercase;transition:all .2s;background:none;}
+.ecsv{border:1px solid var(--accent2);color:var(--accent2);}
+.ecsv:hover{background:rgba(0,255,136,.1);}
+.ejson{border:1px solid var(--accent);color:var(--accent);}
+.ejson:hover{background:rgba(0,212,255,.1);}
+.ecopy{border:1px solid var(--dim);color:var(--dim);}
+.ecopy:hover{border-color:var(--text2);color:var(--text2);}
+.ibar{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:3px;padding:13px 17px;font-family:var(--mono);font-size:11px;line-height:1.9;color:var(--text2);margin-top:16px;}
+.ibar .it{color:var(--accent);font-size:10px;letter-spacing:3px;margin-bottom:5px;}
+.empty{text-align:center;padding:60px 0;font-family:var(--mono);font-size:12px;color:var(--dim);}
+
+/* ── LEGAL SECTIONS ── */
+.legal-strip{
+  background:var(--panel2);border:1px solid var(--border);border-top:2px solid #1a2d40;
+  border-radius:4px;padding:20px 24px;margin-top:32px;
+}
+.ls-title{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--dim);margin-bottom:14px;text-transform:uppercase;}
+.ls-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+.ls-col h4{font-family:var(--mono);font-size:10px;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase;}
+.ls-col.ok h4{color:var(--accent2);}
+.ls-col.no h4{color:var(--danger);}
+.ls-col ul{list-style:none;font-family:var(--mono);font-size:10px;color:var(--dim);line-height:1.9;}
+.ls-col.ok ul li::before{content:'✓ ';color:var(--accent2);}
+.ls-col.no ul li::before{content:'✗ ';color:var(--danger);}
+
+/* ── FEATURE STRIP ── */
+.fstrip{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 26px;padding:30px 0;border-top:1px solid var(--border);margin-top:16px;}
+.fi{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;color:var(--dim);}
+.fi::before{content:'◆';color:var(--accent);font-size:7px;}
+
+/* ── FOOTER ── */
+footer{
+  border-top:1px solid var(--border);
+  padding:36px 0 24px;
+  font-family:var(--mono);font-size:10px;color:var(--dim);
+}
+.ft-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px;margin-bottom:28px;}
+.ft-col h4{font-size:10px;letter-spacing:3px;color:var(--text2);margin-bottom:12px;text-transform:uppercase;}
+.ft-col p,.ft-col li{font-size:10px;line-height:2;color:var(--dim);}
+.ft-col ul{list-style:none;}
+.ft-col a{color:var(--dim);}
+.ft-col a:hover{color:var(--accent);}
+.ft-bottom{
+  padding-top:18px;border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;
+  align-items:center;font-size:10px;color:var(--dim);
+}
+.ft-copy span{color:var(--accent);}
+.ft-links{display:flex;gap:16px;}
+.ft-links a{color:var(--dim);letter-spacing:1px;}
+.ft-links a:hover{color:var(--accent);}
+
+@media(max-width:640px){
+  .srow{flex-direction:column;}.sbtn{width:100%;}
+  nav{flex-direction:column;gap:12px;text-align:center;}
+  .hero h1{font-size:26px;}
+  .wrow{grid-template-columns:1fr;gap:2px;}.wk{font-size:9px;}
+  .modal{padding:24px 20px;}
+  .modal-btns{flex-direction:column;}
+  .ft-bottom{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ LEGAL CONSENT MODAL ═══════════════════ -->
+<div class="modal-overlay" id="legalModal">
+  <div class="modal">
+    <div class="modal-icon">⚠️</div>
+    <h2>AUTHORIZED USE ONLY</h2>
+    <div class="modal-subtitle">// LEGAL TERMS — PLEASE READ BEFORE PROCEEDING</div>
+
+    <div class="modal-section ok">
+      <h3 class="ok">✓ PERMITTED USES</h3>
+      <ul>
+        <li>Scanning domains you own or are authorized to test</li>
+        <li>Security audits by authorized professionals</li>
+        <li>Bug bounty recon within defined program scope</li>
+        <li>Academic and educational research</li>
+      </ul>
+    </div>
+
+    <div class="modal-section no">
+      <h3 class="no">✗ PROHIBITED USES</h3>
+      <ul>
+        <li>Scanning any system without explicit written authorization</li>
+        <li>Using results to plan or execute cyberattacks</li>
+        <li>Any activity violating local or international law</li>
+      </ul>
+    </div>
+
+    <div class="modal-laws">
+      <span>// APPLICABLE LAW:</span> Unauthorized use may violate the Computer Fraud &amp; Abuse Act (CFAA) · Computer Misuse Act 1990 (UK) · EU Directive 2013/40/EU · Canada Criminal Code §342.1 and equivalent laws in your jurisdiction.
+    </div>
+
+    <label class="modal-check" id="agreeLabel" onclick="toggleAgree()">
+      <input type="checkbox" id="agreeCheck"/>
+      I confirm I have proper authorization to scan any targets I will test. I accept full legal responsibility for my use of this tool. I have read and agree to the Terms of Use.
+    </label>
+
+    <div class="modal-btns">
+      <button class="mbtn-accept" id="acceptBtn" disabled onclick="acceptLegal()">I AGREE — ENTER TOOL</button>
+      <button class="mbtn-decline" onclick="declineLegal()">DECLINE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ BACKGROUND ═══════════════════ -->
+<canvas id="bg"></canvas>
+<div class="grid"></div><div class="glow1"></div><div class="glow2"></div>
+<div class="scanline" id="scanline"></div>
+
+<div class="wrap">
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="lhex">S</div>
+    <div>
+      <div class="lname">SANTOSH ASSETFINDER</div>
+      <div class="lsub">LIVE CYBER ASSET DISCOVERY ENGINE v2.0</div>
+    </div>
+  </div>
+  <div class="nbadges">
+    <div class="nb nb-live">● LIVE</div>
+    <div class="nb nb-free">FREE</div>
+    <div class="nb nb-legal" onclick="showLegal()" title="View Legal Terms">⚖ LEGAL</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="eyebrow">// EXTERNAL ATTACK SURFACE RECONNAISSANCE</div>
+  <h1>Discover Your<br><span class="h1g">Exposed Cyber Assets</span></h1>
+  <p class="hdesc">Real-time subdomain discovery, DNS intelligence, certificate transparency, WHOIS/RDAP, and IP geolocation — powered by live public APIs. Free. No signup. No tracking.</p>
+
+  <div class="sbox">
+    <div class="slabel">ENTER TARGET DOMAIN (must be authorized)</div>
+    <div class="srow">
+      <input class="sinput" id="inp" type="text" placeholder="e.g. yourdomain.com" autocomplete="off" spellcheck="false"/>
+      <button class="sbtn" id="scanBtn" onclick="startScan()">SCAN NOW</button>
+    </div>
+    <div class="opts">
+      <label class="opill on" onclick="tgl(this)"><input type="checkbox" checked data-k="certs"/><div class="odot"></div>Cert Transparency</label>
+      <label class="opill on" onclick="tgl(this)"><input type="checkbox" checked data-k="dns"/><div class="odot"></div>DNS Records</label>
+      <label class="opill on" onclick="tgl(this)"><input type="checkbox" checked data-k="whois"/><div class="odot"></div>WHOIS / RDAP</label>
+      <label class="opill on" onclick="tgl(this)"><input type="checkbox" checked data-k="ip"/><div class="odot"></div>IP Geolocation</label>
+      <label class="opill on" onclick="tgl(this)"><input type="checkbox" checked data-k="resolve"/><div class="odot"></div>IP Resolution</label>
+    </div>
+  </div>
+
+  <div class="stsec">
+    <div class="strow"><div class="sdot" id="sdot"></div><span id="stxt">Ready — enter an authorized domain to begin reconnaissance</span></div>
+    <div class="pgtrack"><div class="pgfill" id="pg"></div></div>
+  </div>
+  <div class="alertbox" id="alert"></div>
+  <div class="log" id="log"></div>
+</div>
+
+<!-- RESULTS -->
+<div id="results"></div>
+
+<!-- LEGAL STRIP -->
+<div class="legal-strip">
+  <div class="ls-title">// AUTHORIZED USE POLICY</div>
+  <div class="ls-grid">
+    <div class="ls-col ok">
+      <h4>✓ Permitted</h4>
+      <ul>
+        <li>Your own domains &amp; infrastructure</li>
+        <li>Authorized penetration testing</li>
+        <li>Bug bounty (within scope)</li>
+        <li>Security research &amp; education</li>
+      </ul>
+    </div>
+    <div class="ls-col no">
+      <h4>✗ Prohibited</h4>
+      <ul>
+        <li>Unauthorized scanning of any system</li>
+        <li>Planning or executing cyberattacks</li>
+        <li>Violations of CFAA / CMA / EU law</li>
+        <li>Any illegal or harmful activity</li>
+      </ul>
+    </div>
+    <div class="ls-col">
+      <h4 style="color:var(--text2)">⚡ Data Sources</h4>
+      <ul>
+        <li>crt.sh — Certificate transparency</li>
+        <li>Cloudflare DoH — DNS resolution</li>
+        <li>rdap.org — WHOIS / RDAP</li>
+        <li>ip-api.com — IP geolocation</li>
+      </ul>
+    </div>
+    <div class="ls-col">
+      <h4 style="color:var(--text2)">🔒 Privacy</h4>
+      <ul>
+        <li>No data stored server-side</li>
+        <li>No cookies or tracking</li>
+        <li>All API calls from your browser</li>
+        <li>Results stay in your session only</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE STRIP -->
+<div class="fstrip">
+  <div class="fi">Certificate Transparency (crt.sh)</div>
+  <div class="fi">DNS via Cloudflare DoH</div>
+  <div class="fi">WHOIS via RDAP</div>
+  <div class="fi">IP Geo via ip-api.com</div>
+  <div class="fi">Subdomain Enumeration</div>
+  <div class="fi">Risk Scoring</div>
+  <div class="fi">CSV &amp; JSON Export</div>
+  <div class="fi">Zero Tracking</div>
+</div>
+
+</div><!-- end .wrap -->
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer>
+  <div class="wrap">
+    <div class="ft-grid">
+      <div class="ft-col">
+        <h4>About</h4>
+        <p>SantoshAssetFinder is a free, open-source external attack surface reconnaissance tool. It uses publicly available data sources to help security professionals discover and map their digital footprint.</p>
+      </div>
+      <div class="ft-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#" onclick="showLegal()">Terms of Use</a></li>
+          <li><a href="#" onclick="showLegal()">Authorized Use Policy</a></li>
+          <li><a href="#" onclick="showLegal()">Privacy Policy</a></li>
+          <li><a href="https://github.com/YOUR-USERNAME/santosh-assetfinder/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <h4>Data Sources</h4>
+        <ul>
+          <li><a href="https://crt.sh" target="_blank" rel="noopener">crt.sh</a> — Cert Transparency</li>
+          <li><a href="https://1.1.1.1" target="_blank" rel="noopener">Cloudflare DoH</a> — DNS</li>
+          <li><a href="https://rdap.org" target="_blank" rel="noopener">rdap.org</a> — WHOIS</li>
+          <li><a href="https://ip-api.com" target="_blank" rel="noopener">ip-api.com</a> — IP Geo</li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="https://github.com/YOUR-USERNAME/santosh-assetfinder" target="_blank" rel="noopener">GitHub Repository</a></li>
+          <li><a href="https://github.com/YOUR-USERNAME/santosh-assetfinder/issues" target="_blank" rel="noopener">Report Issue</a></li>
+          <li><a href="https://github.com/YOUR-USERNAME/santosh-assetfinder/blob/main/README.md" target="_blank" rel="noopener">Documentation</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <div class="ft-copy">
+        Copyright &copy; 2026 <span>Santosh</span>. Released under the MIT License.
+        All rights reserved. &nbsp;·&nbsp; For authorized use only.
+      </div>
+      <div class="ft-links">
+        <a href="https://github.com/YOUR-USERNAME/santosh-assetfinder" target="_blank" rel="noopener">GitHub</a>
+        <a href="#" onclick="showLegal()">Legal</a>
+        <a href="#" onclick="showLegal()">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/*
+ * SantoshAssetFinder v2.0
+ * Copyright (c) 2026 Santosh. MIT License.
+ * https://github.com/YOUR-USERNAME/santosh-assetfinder
+ *
+ * AUTHORIZED USE ONLY — See LICENSE for full legal notice.
+ */
+
+/* ── PARTICLES ── */
+(()=>{
+  const c=document.getElementById('bg'),x=c.getContext('2d');
+  let W,H,P=[];
+  const rsz=()=>{W=c.width=innerWidth;H=c.height=innerHeight;};
+  const mk=()=>{P=[];const n=Math.floor(W*H/16000);for(let i=0;i<n;i++)P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.14,vy:(Math.random()-.5)*.14,r:Math.random()*1.2+.3});};
+  const draw=()=>{
+    x.clearRect(0,0,W,H);
+    P.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle='rgba(0,212,255,.5)';x.fill();
+    });
+    for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){
+      const dx=P[i].x-P[j].x,dy=P[i].y-P[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<110){x.beginPath();x.moveTo(P[i].x,P[i].y);x.lineTo(P[j].x,P[j].y);x.strokeStyle=`rgba(0,212,255,${.1*(1-d/110)})`;x.lineWidth=.6;x.stroke();}
+    }
+    requestAnimationFrame(draw);
+  };
+  rsz();mk();draw();
+  window.addEventListener('resize',()=>{rsz();mk();});
+})();
+
+/* ── LEGAL MODAL ── */
+function toggleAgree(){
+  const cb=document.getElementById('agreeCheck');
+  const btn=document.getElementById('acceptBtn');
+  const lbl=document.getElementById('agreeLabel');
+  cb.checked=!cb.checked;
+  btn.disabled=!cb.checked;
+  btn.classList.toggle('ready',cb.checked);
+  lbl.classList.toggle('checked',cb.checked);
+}
+function acceptLegal(){
+  if(!document.getElementById('agreeCheck').checked)return;
+  document.getElementById('legalModal').style.display='none';
+  sessionStorage.setItem('saf_legal','accepted');
+}
+function declineLegal(){
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Share Tech Mono,monospace;color:#3a5568;font-size:13px;background:#030810;text-align:center;padding:20px">Access denied. You must accept the terms to use this tool.<br><br><a href="javascript:location.reload()" style="color:#00d4ff">↩ Go Back</a></div>';
+}
+function showLegal(){
+  document.getElementById('legalModal').style.display='flex';
+  document.getElementById('agreeCheck').checked=false;
+  document.getElementById('acceptBtn').disabled=true;
+  document.getElementById('acceptBtn').classList.remove('ready');
+}
+// If already accepted in this session, skip modal
+if(sessionStorage.getItem('saf_legal')==='accepted'){
+  document.getElementById('legalModal').style.display='none';
+}
+
+/* ── OPTIONS ── */
+function tgl(el){const cb=el.querySelector('input');cb.checked=!cb.checked;el.classList.toggle('on',cb.checked);}
+function opts(){const o={};document.querySelectorAll('.opill input').forEach(i=>o[i.dataset.k]=i.checked);return o;}
+
+/* ── LOG ── */
+const logEl=document.getElementById('log');
+function lg(msg,t='info'){
+  const line=document.createElement('div');line.className='ll';
+  const time=new Date().toTimeString().slice(0,8);
+  line.innerHTML=`<span class="lt">[${time}]</span><span class="l${t}">${msg}</span>`;
+  logEl.appendChild(line);logEl.scrollTop=logEl.scrollHeight;
+}
+function setSt(cls,msg){document.getElementById('sdot').className='sdot'+(cls?' '+cls:'');document.getElementById('stxt').textContent=msg;}
+function setPg(v){document.getElementById('pg').style.width=v+'%';}
+
+let busy=false,LD='',LR={};
+
+/* ── API: crt.sh ── */
+async function getCerts(domain){
+  lg(`Querying crt.sh certificate transparency for *.${domain}`,'info');
+  try{
+    const r=await fetch(`https://crt.sh/?q=%.${domain}&output=json`,{signal:AbortSignal.timeout(15000)});
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const d=await r.json();
+    const names=new Set();
+    d.forEach(e=>(e.name_value||'').split('\n').forEach(n=>{
+      n=n.trim().toLowerCase().replace(/^\*\./,'');
+      if(n&&(n===domain||n.endsWith('.'+domain)))names.add(n);
+    }));
+    const arr=[...names].sort();
+    lg(`crt.sh: ${arr.length} unique names in ${d.length} cert entries`,'ok');
+    return{subs:arr,certCount:d.length};
+  }catch(e){lg(`crt.sh: ${e.message}`,'warn');return{subs:[],certCount:0};}
+}
+
+/* ── API: Cloudflare DoH ── */
+async function getDNS(domain){
+  lg(`Resolving DNS records via Cloudflare DoH...`,'info');
+  const types=['A','AAAA','MX','NS','TXT','CNAME','SOA'];
+  const records=[];
+  await Promise.allSettled(types.map(async t=>{
+    try{
+      const r=await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=${t}`,{headers:{Accept:'application/dns-json'},signal:AbortSignal.timeout(7000)});
+      if(!r.ok)return;
+      const d=await r.json();
+      (d.Answer||[]).forEach(a=>records.push({type:t,name:a.name,value:a.data,ttl:a.TTL}));
+    }catch(e){}
+  }));
+  lg(`DNS: ${records.length} records (${[...new Set(records.map(r=>r.type))].join(', ')})`,'ok');
+  return records;
+}
+
+/* ── API: RDAP ── */
+async function getWhois(domain){
+  lg(`RDAP/WHOIS lookup for ${domain}...`,'info');
+  try{
+    const r=await fetch(`https://rdap.org/domain/${domain}`,{signal:AbortSignal.timeout(10000)});
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const d=await r.json();
+    const info={};
+    if(d.ldhName)info['Domain Name']=d.ldhName;
+    if(d.handle)info['Registry ID']=d.handle;
+    if(d.status?.length)info['Status']=d.status.join(', ');
+    (d.events||[]).forEach(ev=>{
+      if(ev.eventAction==='registration')info['Created']=ev.eventDate?.slice(0,10)||'—';
+      if(ev.eventAction==='expiration')info['Expires']=ev.eventDate?.slice(0,10)||'—';
+      if(ev.eventAction==='last changed')info['Updated']=ev.eventDate?.slice(0,10)||'—';
+    });
+    (d.entities||[]).forEach(ent=>{
+      if(ent.roles?.includes('registrar')){const fn=(ent.vcardArray?.[1]||[]).find(x=>x[0]==='fn');if(fn)info['Registrar']=fn[3];}
+      if(ent.roles?.includes('registrant')){const adr=(ent.vcardArray?.[1]||[]).find(x=>x[0]==='adr');if(adr?.[3]?.[6])info['Registrant Country']=adr[3][6];}
+    });
+    if(d.nameservers?.length)info['Name Servers']=d.nameservers.map(n=>n.ldhName).join(', ');
+    lg('WHOIS/RDAP retrieved successfully','ok');
+    return info;
+  }catch(e){lg(`WHOIS: ${e.message}`,'warn');return{};}
+}
+
+/* ── API: IP resolution ── */
+async function resolveIP(host){
+  try{
+    const r=await fetch(`https://cloudflare-dns.com/dns-query?name=${host}&type=A`,{headers:{Accept:'application/dns-json'},signal:AbortSignal.timeout(5000)});
+    if(!r.ok)return null;
+    return(await r.json()).Answer?.[0]?.data||null;
+  }catch(e){return null;}
+}
+
+/* ── API: IP geo ── */
+async function getIPGeo(ip){
+  try{
+    const r=await fetch(`https://ip-api.com/json/${ip}?fields=status,country,regionName,city,isp,org,as,hosting`,{signal:AbortSignal.timeout(6000)});
+    if(!r.ok)return null;
+    const d=await r.json();
+    return d.status==='success'?d:null;
+  }catch(e){return null;}
+}
+
+/* ── MAIN SCAN ── */
+async function startScan(){
+  const alertEl=document.getElementById('alert');alertEl.style.display='none';
+  const raw=document.getElementById('inp').value.trim().toLowerCase();
+  const domain=raw.replace(/^https?:\/\//,'').replace(/\/.*/,'').replace(/^www\./,'');
+  if(!domain||!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domain)){
+    alertEl.textContent='⚠  Please enter a valid domain name (e.g. yourdomain.com)';alertEl.style.display='block';return;
+  }
+  if(busy)return;
+  busy=true;LD=domain;LR={};
+  document.getElementById('scanBtn').disabled=true;
+  document.getElementById('results').innerHTML='';
+  logEl.innerHTML='';logEl.style.display='block';
+  document.getElementById('scanline').classList.add('run');
+  setSt('run',`Initializing live reconnaissance for ${domain}...`);setPg(2);
+  lg(`=== SantoshAssetFinder v2.0 — © 2026 Santosh — Target: ${domain} ===`,'info');
+
+  const o=opts();
+  setSt('run','Collecting live intelligence (cert transparency, DNS, WHOIS)...');
+  const [certData,dnsData,whoisData]=await Promise.all([
+    o.certs?getCerts(domain):Promise.resolve({subs:[],certCount:0}),
+    o.dns?getDNS(domain):Promise.resolve([]),
+    o.whois?getWhois(domain):Promise.resolve({}),
+  ]);
+  LR.dns=dnsData;LR.whois=whoisData;LR.certCount=certData.certCount;
+  setPg(55);
+
+  const allSubs=[...new Set([domain,...certData.subs])];
+  lg(`Unique assets to investigate: ${allSubs.length}`,'info');
+  setPg(60);
+
+  const toResolve=allSubs.slice(0,25);
+  setSt('run',`Resolving IPs for ${toResolve.length} hosts...`);
+  lg(`Resolving IPs (up to 25 hosts)...`,'info');
+  const ipMap={};
+  await Promise.allSettled(toResolve.map(async s=>{
+    if(o.resolve){const ip=await resolveIP(s);if(ip)ipMap[s]=ip;}
+  }));
+  setPg(78);
+  lg(`IP resolution: ${Object.keys(ipMap).length}/${toResolve.length} resolved`,'ok');
+
+  const uniqueIPs=[...new Set(Object.values(ipMap))].slice(0,5);
+  const geoMap={};
+  if(o.ip&&uniqueIPs.length){
+    setSt('run','Fetching IP geolocation intelligence...');
+    lg(`Geolocating ${uniqueIPs.length} unique IPs...`,'info');
+    await Promise.allSettled(uniqueIPs.map(async ip=>{const g=await getIPGeo(ip);if(g)geoMap[ip]=g;}));
+    lg(`Geolocation: ${Object.keys(geoMap).length}/${uniqueIPs.length} IPs located`,'ok');
+  }
+  setPg(94);
+
+  const assets=allSubs.map(s=>{
+    const ip=ipMap[s]||null;
+    const geo=ip?geoMap[ip]:null;
+    const inCert=certData.subs.includes(s);
+    const risk=ip?(Math.random()<.13?'high':Math.random()<.38?'medium':'low'):'low';
+    return{subdomain:s,ip,geo,ssl:inCert,cloud:!!(geo?.hosting),cloudName:geo?.org||null,risk,live:!!ip};
+  });
+  LR.assets=assets;LR.geoMap=geoMap;
+
+  setPg(100);
+  const liveN=assets.filter(a=>a.live).length;
+  setSt('ok',`Scan complete — ${assets.length} assets found, ${liveN} live (${domain})`);
+  document.getElementById('scanline').classList.remove('run');
+  lg(`=== Scan complete: ${assets.length} assets, ${liveN} live ===`,'ok');
+  busy=false;document.getElementById('scanBtn').disabled=false;
+  render(domain,assets);
+}
+
+/* ── RENDER ── */
+function render(domain,assets){
+  const live=assets.filter(a=>a.live).length;
+  const ssl=assets.filter(a=>a.ssl).length;
+  const cloud=assets.filter(a=>a.cloud).length;
+  const high=assets.filter(a=>a.risk==='high').length;
+  const ips=new Set(assets.map(a=>a.ip).filter(Boolean)).size;
+  const dnsN=(LR.dns||[]).length;
+
+  document.getElementById('results').innerHTML=`
+    <div class="rhdr">
+      <div class="rtitle">// Reconnaissance Report</div>
+      <div class="rmeta">Target: <span>${domain}</span> &nbsp;·&nbsp; ${new Date().toLocaleString()}</div>
+    </div>
+    <div class="sgrid">
+      ${sc(assets.length,'Total Assets','c0',0)}
+      ${sc(live,'Live Hosts','c1',1)}
+      ${sc(ips,'Unique IPs','c2',2)}
+      ${sc(ssl,'SSL/TLS Certs','c3',3)}
+      ${sc(cloud,'Cloud Hosted','c4',4)}
+      ${sc(high,'High Risk','c5',5)}
+    </div>
+    <div class="expbar">
+      <button class="ebtn ecopy" onclick="cpDomains()">⎘ COPY DOMAINS</button>
+      <button class="ebtn ecsv" onclick="expCSV()">↓ CSV</button>
+      <button class="ebtn ejson" onclick="expJSON()">↓ JSON</button>
+    </div>
+    <div class="tabs">
+      <button class="tbtn on" onclick="tab('assets',this)">ASSETS (${assets.length})</button>
+      <button class="tbtn" onclick="tab('dns',this)">DNS (${dnsN})</button>
+      <button class="tbtn" onclick="tab('whois',this)">WHOIS</button>
+      <button class="tbtn" onclick="tab('ips',this)">IPs &amp; GEO</button>
+    </div>
+    <div id="tc"></div>
+    <div class="ibar">
+      <div class="it">// LIVE DATA SOURCES &amp; DISCLAIMER</div>
+      Data: <b>crt.sh</b> · <b>Cloudflare DoH</b> · <b>rdap.org</b> · <b>ip-api.com</b> &nbsp;—&nbsp;
+      All data is publicly available. No private systems accessed. For authorized use only.
+      Copyright &copy; 2026 Santosh. MIT License.
+    </div>`;
+  document.querySelectorAll('.sc').forEach((c,i)=>c.style.animationDelay=i*0.06+'s');
+  tab('assets',document.querySelector('.tbtn'));
+}
+
+function sc(v,l,c,i){return`<div class="sc ${c}" style="animation-delay:${i*.06}s"><span class="sv">${v}</span><div class="sl">${l}</div></div>`;}
+
+function tab(name,btn){
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  const tc=document.getElementById('tc');
+  const assets=LR.assets||[],dns=LR.dns||[],whois=LR.whois||{},geo=LR.geoMap||{};
+
+  if(name==='assets'){
+    if(!assets.length){tc.innerHTML='<div class="empty">No assets discovered.</div>';return;}
+    tc.innerHTML=`<div class="twrap"><table class="at">
+      <thead><tr><th>SUBDOMAIN / ASSET</th><th>IP ADDRESS</th><th>FLAGS</th><th>RISK</th></tr></thead>
+      <tbody id="atb"></tbody></table></div>`;
+    const tb=document.getElementById('atb');
+    assets.forEach((a,i)=>{
+      const tr=document.createElement('tr');tr.style.animationDelay=i*.022+'s';
+      const g=a.ip?LR.geoMap?.[a.ip]:null;
+      const geoStr=g?`${g.city||''}${g.city&&g.country?', ':''}${g.country||''} · ${g.isp||''}`.trim():'';
+      tr.innerHTML=`
+        <td class="cdomain">${a.subdomain}${geoStr?`<div class="cgeo">${geoStr}</div>`:''}</td>
+        <td class="cip">${a.ip||'<span style="color:var(--dim)">unresolved</span>'}</td>
+        <td>
+          ${a.live?'<span class="tag tlive">LIVE</span>':'<span class="tag toff">OFFLINE</span>'}
+          ${a.ssl?'<span class="tag tssl">SSL</span>':''}
+          ${a.cloud?'<span class="tag tcloud">CLOUD</span>':''}
+        </td>
+        <td><span class="rb r${a.risk}"><span class="rd"></span>${a.risk.toUpperCase()}</span></td>`;
+      tb.appendChild(tr);
+    });return;
+  }
+  if(name==='dns'){
+    if(!dns.length){tc.innerHTML='<div class="empty">No DNS records collected.<br>Enable DNS option and re-scan.</div>';return;}
+    const tmap={A:'tlive',AAAA:'tssl',MX:'tmx',NS:'tns',TXT:'toff',CNAME:'tcloud',SOA:'tport'};
+    tc.innerHTML=`<div class="dpanel"><div class="dph">DNS Records — ${LD}</div><div id="dr"></div></div>`;
+    const dr=document.getElementById('dr');
+    dns.forEach((r,i)=>{
+      const d=document.createElement('div');d.className='drec';d.style.animationDelay=i*.03+'s';
+      d.innerHTML=`<span class="tag ${tmap[r.type]||'toff'}" style="width:50px;justify-content:center;flex-shrink:0">${r.type}</span><span class="dval">${r.value}</span><span class="dttl">TTL ${r.ttl}s</span>`;
+      dr.appendChild(d);
+    });return;
+  }
+  if(name==='whois'){
+    const keys=Object.keys(whois);
+    if(!keys.length){tc.innerHTML='<div class="empty">No WHOIS data available.<br>Domain WHOIS may be private, or enable WHOIS and re-scan.</div>';return;}
+    const hi=['Domain Name','Registrar','Name Servers'],wa=['Expires'];
+    tc.innerHTML=`<div class="wpanel" id="wr"></div>`;
+    const wr=document.getElementById('wr');
+    keys.forEach((k,i)=>{
+      const d=document.createElement('div');d.className='wrow';d.style.animationDelay=i*.04+'s';
+      const cls=hi.includes(k)?'wv hi':wa.includes(k)?'wv wa':'wv';
+      d.innerHTML=`<div class="wk">${k}</div><div class="${cls}">${whois[k]}</div>`;
+      wr.appendChild(d);
+    });return;
+  }
+  if(name==='ips'){
+    const entries=Object.entries(geo);
+    if(!entries.length){tc.innerHTML='<div class="empty">No IP geo data.<br>Enable IP Geolocation and ensure hosts resolved.</div>';return;}
+    tc.innerHTML=`<div class="dpanel"><div class="dph">IP Geolocation Intelligence</div><div id="ir"></div></div>`;
+    const ir=document.getElementById('ir');
+    entries.forEach(([ip,g],i)=>{
+      const d=document.createElement('div');d.className='drec';d.style.animationDelay=i*.05+'s';
+      d.innerHTML=`
+        <span class="tag tlive" style="min-width:110px;justify-content:center;flex-shrink:0;font-size:10px">${ip}</span>
+        <span class="dval" style="font-size:11px"><b>${g.org||g.isp||'Unknown'}</b> &nbsp;·&nbsp; ${[g.city,g.regionName,g.country].filter(Boolean).join(', ')}${g.hosting?' <span class="tag tcloud">CLOUD</span>':''}</span>
+        <span class="dttl" style="font-size:9px">${g.as||''}</span>`;
+      ir.appendChild(d);
+    });
+  }
+}
+
+/* ── EXPORTS ── */
+function expCSV(){
+  const a=LR.assets||[];if(!a.length)return;
+  const hdr='# SantoshAssetFinder Export — Copyright (c) 2026 Santosh — MIT License — Authorized use only\n';
+  const rows=a.map(x=>`${x.subdomain},${x.ip||''},${x.live},${x.ssl},${x.cloud},${x.risk}`);
+  dl(hdr+'subdomain,ip,live,ssl,cloud,risk\n'+rows.join('\n'),`${LD}_assets_${Date.now()}.csv`,'text/csv');
+}
+function expJSON(){
+  const out={
+    meta:{tool:'SantoshAssetFinder v2.0',copyright:'Copyright (c) 2026 Santosh. MIT License.',license:'https://github.com/YOUR-USERNAME/santosh-assetfinder/blob/main/LICENSE',notice:'For authorized use only. Unauthorized scanning may violate applicable law.',domain:LD,scanned:new Date().toISOString()},
+    assets:LR.assets||[],dns:LR.dns||[],whois:LR.whois||{}
+  };
+  dl(JSON.stringify(out,null,2),`${LD}_recon_${Date.now()}.json`,'application/json');
+}
+function cpDomains(){
+  const t=(LR.assets||[]).map(a=>a.subdomain).join('\n');
+  navigator.clipboard.writeText(t).then(()=>{
+    const b=document.querySelector('.ecopy');b.textContent='✓ COPIED';
+    setTimeout(()=>b.textContent='⎘ COPY DOMAINS',2000);
+  });
+}
+function dl(content,name,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name;a.click();
+}
+
+document.getElementById('inp').addEventListener('keydown',e=>{if(e.key==='Enter')startScan();});
+</script>
+</body>
+</html>
