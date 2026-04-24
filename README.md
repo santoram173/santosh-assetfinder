@@ -11,7 +11,7 @@ Educational cybersecurity-style asset discovery dashboard for OSINT learning, DN
 
 **SantoshAssetFinder** is a free, browser-based external attack surface reconnaissance tool. Enter any domain and instantly discover subdomains, DNS records, SSL certificates, IP addresses, geolocation data, and WHOIS/RDAP information — all powered by live public APIs with no server-side infrastructure required.
 
-🌐 **Live Demo:** [https://YOUR-USERNAME.github.io/santosh-assetfinder](https://YOUR-USERNAME.github.io/santosh-assetfinder)
+🌐 **Live Demo:** https://santoram173.github.io/santosh-assetfinder/
 
 ---
 
